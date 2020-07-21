@@ -1,6 +1,10 @@
 # Program Line Counter
 Counts all the meaningful (or meaningless) lines in your code given a root directory.
 
+### Current Features
+- Select root file directory where you'd like the count to start
+- Provide the file extension for the files you'd like the program to process
+
 ### TODO
 - Add options for ignoring or including:
   * Blank lines
