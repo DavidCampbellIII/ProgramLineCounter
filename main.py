@@ -61,15 +61,15 @@ class Window:
             for subdir, _, files in os.walk(root_dir):
                 for file in files:
                     filepath = subdir + os.sep + file
-                    self.status_text = "Analyzing " + filepath + "..."
+                    self.status_text += "Analyzing " + filepath + "..."
                     if filepath.endswith(file_extension):
                         with open(filepath) as f:
                             length = count_lines(f.readlines())
-                            self.status_text = "Found " + str(length) + (" lines!\n", " line!\n")[length == 1]
+                            self.status_text += "Found " + str(length) + (" lines!\n", " line!\n")[length == 1]
                             txt_status_box.update()
                             total_line_count += length
             
-            self.status_text = "\nDONE!\n\nTotal lines: " + str(total_line_count)
+            self.status_text += "\nDONE!\n\nTotal lines: " + str(total_line_count)
             btn_redo.pack()
 
         def count_lines(lines):
@@ -90,7 +90,7 @@ class Window:
             return count
 
         def refresh_status(self):
-            #txt_status_box.delete(1.0, tk.END)
+            txt_status_box.delete(1.0, tk.END)
             txt_status_box.insert(tk.END, self.status_text)
             txt_status_box.see(tk.END)
             txt_status_box.after(STATUS_REFRESH_RATE, refresh_status, self)
