@@ -1,3 +1,5 @@
+import json
+
 class Language:
     def __init__(self, name, extension, comment, canHaveMultiLines, lineEnder):
         self.name = name
@@ -7,4 +9,5 @@ class Language:
         self.lineEnder = lineEnder
 
     def loadLanguages(path):
-        pass
+        langsDict = json.loads(path)
+        return langsDict

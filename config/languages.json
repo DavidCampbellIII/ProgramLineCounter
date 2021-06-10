@@ -1,0 +1,30 @@
+[
+    {
+        "name": "C-Sharp",
+        "extension": ".cs",
+        "comment": "//",
+        "canHaveMultiLines": true,
+        "lineEnder": ";"
+    },
+    {
+        "name": "Python",
+        "extension": ".py",
+        "comment": "#",
+        "canHaveMultilines": false,
+        "lineEnder": ""
+    },
+    {
+        "name": "Java",
+        "extension": ".java",
+        "comment": "//",
+        "canHaveMultilines": true,
+        "lineEnder": ";"
+    },
+    {
+        "name": "C++",
+        "extension": ".cpp",
+        "comment": "//",
+        "canHaveMultilines": true,
+        "lineEnder": ";"
+    }
+]
