@@ -9,5 +9,11 @@ class Language:
         self.lineEnder = lineEnder
 
     def loadLanguages(path):
-        langsDict = json.loads(path)
-        return langsDict
+        with open(path) as f:
+            langsDict = json.load(f)
+        
+        languages = []
+        for lang in langsDict:
+            language = Language(lang["name"], lang["extension"], lang["comment"], lang["canHaveMultiLines"], lang["lineEnder"])
+            languages.append(language)
+        return languages

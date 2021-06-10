@@ -1,2 +1,9 @@
+#pycache
 __pycache__/
 *.pyc
+
+#pyinstaller
+*.manifest
+*.spec
+dist/
+build/

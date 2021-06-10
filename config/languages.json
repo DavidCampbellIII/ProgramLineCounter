@@ -10,21 +10,21 @@
         "name": "Python",
         "extension": ".py",
         "comment": "#",
-        "canHaveMultilines": false,
+        "canHaveMultiLines": false,
         "lineEnder": ""
     },
     {
         "name": "Java",
         "extension": ".java",
         "comment": "//",
-        "canHaveMultilines": true,
+        "canHaveMultiLines": true,
         "lineEnder": ";"
     },
     {
         "name": "C++",
         "extension": ".cpp",
         "comment": "//",
-        "canHaveMultilines": true,
+        "canHaveMultiLines": true,
         "lineEnder": ";"
     }
 ]

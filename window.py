@@ -6,7 +6,7 @@ brackets = set("{}[]()")
 STATUS_REFRESH_RATE = 10
 
 class Window:
-    def __init__(self, root):
+    def __init__(self, root, languages):
         def set_up_main():
             txt_status_box.pack_forget()
             btn_redo.pack_forget()
