@@ -1,0 +1,18 @@
+{
+    "c-sharp":
+    {
+        "name": "c-sharp",
+        "extension": ".cs",
+        "comment": "//",
+        "canHaveMultiLines": false,
+        "lineEnder": ";"
+    },
+    "python":
+    {
+        "name": "python",
+        "extension": ".py",
+        "comment": "#",
+        "canHaveMultilines": false,
+        "lineEnder": ""
+    }
+}
