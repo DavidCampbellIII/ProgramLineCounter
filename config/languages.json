@@ -3,28 +3,48 @@
         "name": "C-Sharp",
         "extension": ".cs",
         "comment": "//",
+        "multiLineComments": {
+            "start": "/*",
+            "end": "*/"
+        },
         "canHaveMultiLines": true,
-        "lineEnder": ";"
+        "lineEnder": ";",
+        "lineBreaker": ""
     },
     {
         "name": "Python",
         "extension": ".py",
         "comment": "#",
+        "multiLineComments": {
+            "start": "''' | \"\"\"",
+            "end": "''' | \"\"\""
+        },
         "canHaveMultiLines": false,
-        "lineEnder": ""
+        "lineEnder": "",
+        "lineBreaker": "\\"
     },
     {
         "name": "Java",
         "extension": ".java",
         "comment": "//",
+        "multiLineComments": {
+            "start": "/*",
+            "end": "*/"
+        },
         "canHaveMultiLines": true,
-        "lineEnder": ";"
+        "lineEnder": ";",
+        "lineBreaker": ""
     },
     {
         "name": "C++",
         "extension": ".cpp",
         "comment": "//",
+        "multiLineComments": {
+            "start": "/*",
+            "end": "*/"
+        },
         "canHaveMultiLines": true,
-        "lineEnder": ";"
+        "lineEnder": ";",
+        "lineBreaker": ""
     }
 ]

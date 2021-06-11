@@ -3,7 +3,7 @@ from tkinter.filedialog import askdirectory
 import os
 
 brackets = set("{}[]()")
-STATUS_REFRESH_RATE = 10
+STATUS_REFRESH_RATE = 1000
 
 class Window:
     def __init__(self, root, languages):
@@ -13,18 +13,22 @@ class Window:
 
             lbl_instructions.pack()
             btn_browse.pack()
-            etr_file_extension.pack()
+            opt_languages.pack()
             chk_ignore_blank_lines.pack()
             chk_ignore_bracket_lines.pack()
             chk_ignore_patterns.pack()
             lbl_current_path.pack()
 
+            reset_texts()
+            txt_status_box.delete("1.0", tk.END)
+
+        def reset_texts():
             lbl_current_path["text"] = "None"
-            txt_status_box.delete(1.0, tk.END)
+            lbl_instructions["text"] = "Please select the root directory of all the code you'd like to process"
 
         def hide_main_menu():
             btn_browse.pack_forget()
-            etr_file_extension.pack_forget()
+            opt_languages.pack_forget()
             btn_start_count.pack_forget()
             lbl_current_path.pack_forget()
             chk_ignore_blank_lines.pack_forget()
@@ -49,10 +53,12 @@ class Window:
             hide_main_menu()
             
             txt_status_box.pack()
-            file_extension = etr_file_extension.get().strip()
+            language = languages[selected_language.get()]
+            file_extension = language.extension.strip()
             if file_extension[0] != ".": #add the '.' if it is not already there
                 file_extension = "." + file_extension
 
+            self.status_text = ""
             refresh_status(self)
 
             total_line_count = 0
@@ -64,7 +70,6 @@ class Window:
                         with open(filepath) as f:
                             length = count_lines(f.readlines())
                             self.status_text += "Found " + str(length) + (" lines!\n", " line!\n")[length == 1]
-                            txt_status_box.update()
                             total_line_count += length
             
             self.status_text += "\nDONE!\n\nTotal lines: " + str(total_line_count)
@@ -94,11 +99,15 @@ class Window:
             txt_status_box.after(STATUS_REFRESH_RATE, refresh_status, self)
 
         self.status_text = ""
-        lbl_instructions = tk.Label(root, text="Please select the root directory of all the code you'd like to process")
-        lbl_current_path = tk.Label(text="None", fg='#03bafc')
+        lbl_instructions = tk.Label(root)
+        lbl_current_path = tk.Label(fg='#03bafc')
 
-        etr_file_extension = tk.Entry()
-        etr_file_extension.insert(0, ".cs")
+        #populate options menu with loaded langauge names
+        language_names = [name for name, lang in languages.items()]
+        selected_language = tk.StringVar()
+        #default langauge starts with first language in config
+        selected_language.set(language_names[0])
+        opt_languages = tk.OptionMenu(root, selected_language, *language_names)
 
         btn_browse = tk.Button(root, text="Browse", command=on_browse_click)
         btn_start_count = tk.Button(root, text="Start Count", command=lambda: start_count(self))

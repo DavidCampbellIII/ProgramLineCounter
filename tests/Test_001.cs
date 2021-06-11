@@ -2,7 +2,7 @@
 //Comments - 8 lines
 //Comments and brackets - 4 lines
 //Comments, brackets, and multilines as one - 3 lines
-class Test
+class Test_001
 {
     //this is a test comment in C#
     public static void main(string[] args)
