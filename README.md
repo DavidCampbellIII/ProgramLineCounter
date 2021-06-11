@@ -6,7 +6,7 @@ Counts all the meaningful (or meaningless) lines in your code given a root direc
 - Provide the file extension for the files you'd like the program to process
 
 ### TODO
-![23%](https://progress-bar.dev/23)
+![23%](https://progress-bar.dev/23) COMPLETE
 - [ ] Add options for ignoring or including:
   * [x] Blank lines
   * [ ] Comments
