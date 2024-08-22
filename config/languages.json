@@ -1,7 +1,7 @@
 [
     {
         "name": "C-Sharp",
-        "extension": ".cs",
+        "extensions": ".cs",
         "comment": "//",
         "multiLineComments": {
             "start": "/*",
@@ -13,7 +13,7 @@
     },
     {
         "name": "Python",
-        "extension": ".py",
+        "extensions": ".py",
         "comment": "#",
         "multiLineComments": {
             "start": "''' | \"\"\"",
@@ -25,7 +25,7 @@
     },
     {
         "name": "Java",
-        "extension": ".java",
+        "extensions": ".java",
         "comment": "//",
         "multiLineComments": {
             "start": "/*",
@@ -37,7 +37,7 @@
     },
     {
         "name": "C++",
-        "extension": ".cpp",
+        "extensions": [".cpp", ".h"],
         "comment": "//",
         "multiLineComments": {
             "start": "/*",

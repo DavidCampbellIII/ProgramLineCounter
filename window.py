@@ -54,9 +54,7 @@ class Window:
             
             txt_status_box.pack()
             language = languages[selected_language.get()]
-            file_extension = language.extension.strip()
-            if file_extension[0] != ".": #add the '.' if it is not already there
-                file_extension = "." + file_extension
+            file_extensions = clean_file_extensions(language.extensions)
 
             self.status_text = ""
             refresh_status(self)
@@ -66,7 +64,7 @@ class Window:
                 for file in files:
                     filepath = subdir + os.sep + file
                     self.status_text += "Analyzing " + filepath + "..."
-                    if filepath.endswith(file_extension):
+                    if has_valid_extension(file_extensions, filepath):
                         with open(filepath) as f:
                             length = count_lines(f.readlines())
                             self.status_text += "Found " + str(length) + (" lines!\n", " line!\n")[length == 1]
@@ -74,6 +72,20 @@ class Window:
             
             self.status_text += "\nDONE!\n\nTotal lines: " + str(total_line_count)
             btn_redo.pack()
+            
+        def clean_file_extensions(file_extensions):
+            for extension in file_extensions:
+                extension = extension.strip()
+                #add the '.' if it is not already there
+                if extension[0] != ".":
+                    extension = "." + extension
+            return file_extensions
+        
+        def has_valid_extension(file_extensions, file):
+            for extension in file_extensions:
+                if file.endswith(extension):
+                    return True
+            return False
 
         def count_lines(lines):
             count = 0
