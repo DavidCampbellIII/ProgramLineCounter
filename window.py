@@ -248,14 +248,18 @@ class Window:
 
         frm_dir_wrap = ttk.Frame(frm_results)
         dir_tree = ttk.Treeview(frm_dir_wrap,
-            columns=("dirpath", "lines", "pct"), show="headings",
-            selectmode="browse", height=7)
-        dir_tree.heading("dirpath", text="Directory", anchor="w")
-        dir_tree.heading("lines",   text="Lines",     anchor="e")
-        dir_tree.heading("pct",     text="%",         anchor="e")
-        dir_tree.column("dirpath", anchor="w", stretch=True)
-        dir_tree.column("lines",   anchor="e", width=90,  minwidth=70,  stretch=False)
-        dir_tree.column("pct",     anchor="e", width=70,  minwidth=55,  stretch=False)
+            columns=("dirpath", "lines", "pct", "self_lines", "self_pct"),
+            show="headings", selectmode="browse", height=7)
+        dir_tree.heading("dirpath",    text="Directory",  anchor="w")
+        dir_tree.heading("lines",      text="Total",      anchor="e")
+        dir_tree.heading("pct",        text="Total %",    anchor="e")
+        dir_tree.heading("self_lines", text="Self",       anchor="e")
+        dir_tree.heading("self_pct",   text="Self %",     anchor="e")
+        dir_tree.column("dirpath",    anchor="w", stretch=True)
+        dir_tree.column("lines",      anchor="e", width=90,  minwidth=70,  stretch=False)
+        dir_tree.column("pct",        anchor="e", width=70,  minwidth=55,  stretch=False)
+        dir_tree.column("self_lines", anchor="e", width=90,  minwidth=70,  stretch=False)
+        dir_tree.column("self_pct",   anchor="e", width=70,  minwidth=55,  stretch=False)
         scr_dir_y = ttk.Scrollbar(frm_dir_wrap, command=dir_tree.yview)
         scr_dir_x = ttk.Scrollbar(frm_dir_wrap,
             orient=tk.HORIZONTAL, command=dir_tree.xview)
@@ -339,16 +343,37 @@ class Window:
             btn_log_toggle.configure(text="▼  Hide Log")
             show_view(frm_scanning)
 
-        def show_results_view(total, results):
+        def show_results_view(total, results, root_folders):
             from collections import defaultdict
             self.total_lines  = total
             self.scan_results = results
 
-            # Aggregate lines per immediate parent directory
+            norm_roots = {os.path.normcase(os.path.abspath(f)) for f in root_folders}
+
             dir_totals = defaultdict(int)
+            dir_self   = defaultdict(int)
+            display_name = {}
             for fpath, n in results:
-                dir_totals[os.path.dirname(fpath)] += n
-            self.dir_results = list(dir_totals.items())
+                abs_dir = os.path.abspath(os.path.dirname(fpath))
+                key = os.path.normcase(abs_dir)
+                dir_self[key] += n
+                d_display = abs_dir
+                d = key
+                while True:
+                    dir_totals[d] += n
+                    if d not in display_name:
+                        display_name[d] = d_display
+                    if d in norm_roots:
+                        break
+                    d_display = os.path.dirname(d_display)
+                    parent = os.path.normcase(d_display)
+                    if parent == d:
+                        break
+                    d = parent
+            self.dir_results = [
+                (display_name.get(k, k), v, dir_self.get(k, 0))
+                for k, v in dir_totals.items()
+            ]
 
             lbl_res_title["text"] = f"Complete — {total:,} total lines"
             lbl_res_sub["text"] = (
@@ -365,9 +390,10 @@ class Window:
 
         def sort_dir_results(descending=True):
             dir_tree.delete(*dir_tree.get_children())
-            for dpath, n in sorted(
+            for dpath, n, s in sorted(
                     self.dir_results, key=lambda x: x[1], reverse=descending):
-                dir_tree.insert("", tk.END, values=(dpath, f"{n:,}", _pct(n)))
+                dir_tree.insert("", tk.END, values=(
+                    dpath, f"{n:,}", _pct(n), f"{s:,}", _pct(s)))
 
         def sort_results(descending=True):
             tree.delete(*tree.get_children())
@@ -426,7 +452,7 @@ class Window:
                                     _log(f"  {fpath}  →  ERROR: {e}\n")
                 _log(f"\nDONE!   Total: {total:,} lines\n")
                 self.scanning = False
-                root.after(0, lambda: show_results_view(total, results))
+                root.after(0, lambda: show_results_view(total, results, folders))
 
             threading.Thread(target=scan_thread, daemon=True).start()
 
