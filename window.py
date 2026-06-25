@@ -69,7 +69,9 @@ class Window:
         self.status_text  = ""
         self.scanning     = False
         self.scan_results = []      # list of (filepath, line_count)
-        self.dir_results  = []      # list of (dirpath, line_count)
+        self.dir_data     = {}      # norm_key -> (display_name, total, self_count)
+        self.dir_children = {}      # norm_key -> [child_norm_keys]
+        self.dir_roots    = []      # top-level norm_keys
         self.total_lines  = 0
 
         # ── Root layout ───────────────────────────────────────────
@@ -248,14 +250,14 @@ class Window:
 
         frm_dir_wrap = ttk.Frame(frm_results)
         dir_tree = ttk.Treeview(frm_dir_wrap,
-            columns=("dirpath", "lines", "pct", "self_lines", "self_pct"),
-            show="headings", selectmode="browse", height=7)
-        dir_tree.heading("dirpath",    text="Directory",  anchor="w")
+            columns=("lines", "pct", "self_lines", "self_pct"),
+            show="tree headings", selectmode="browse", height=10)
+        dir_tree.heading("#0",         text="Directory",  anchor="w")
         dir_tree.heading("lines",      text="Total",      anchor="e")
         dir_tree.heading("pct",        text="Total %",    anchor="e")
         dir_tree.heading("self_lines", text="Self",       anchor="e")
         dir_tree.heading("self_pct",   text="Self %",     anchor="e")
-        dir_tree.column("dirpath",    anchor="w", stretch=True)
+        dir_tree.column("#0",         anchor="w", width=350, minwidth=200, stretch=True)
         dir_tree.column("lines",      anchor="e", width=90,  minwidth=70,  stretch=False)
         dir_tree.column("pct",        anchor="e", width=70,  minwidth=55,  stretch=False)
         dir_tree.column("self_lines", anchor="e", width=90,  minwidth=70,  stretch=False)
@@ -267,8 +269,9 @@ class Window:
             yscrollcommand=scr_dir_y.set, xscrollcommand=scr_dir_x.set)
         scr_dir_y.pack(side=tk.RIGHT,  fill=tk.Y)
         scr_dir_x.pack(side=tk.BOTTOM, fill=tk.X)
+        dir_tree.tag_configure("child", foreground=FG_DIM)
         dir_tree.pack(fill=tk.BOTH, expand=True)
-        frm_dir_wrap.pack(fill=tk.X, padx=16, pady=(0, 10))
+        frm_dir_wrap.pack(fill=tk.BOTH, expand=True, padx=16, pady=(0, 10))
 
         # ── File breakdown ─────────────────────────────────────
         _section_header(frm_results, "BY FILE",
@@ -346,13 +349,28 @@ class Window:
         def show_results_view(total, results, root_folders):
             from collections import defaultdict
             self.total_lines  = total
-            self.scan_results = results
 
-            norm_roots = {os.path.normcase(os.path.abspath(f)) for f in root_folders}
+            abs_roots = [os.path.abspath(f) for f in root_folders]
+            norm_roots = {os.path.normcase(r) for r in abs_roots}
+
+            def to_relative(abs_path):
+                for r in abs_roots:
+                    if abs_path.startswith(r):
+                        rel = os.path.relpath(abs_path, r)
+                        if rel == ".":
+                            return os.path.basename(r)
+                        return os.path.join(os.path.basename(r), rel)
+                return abs_path
+
+            self.scan_results = [
+                (to_relative(os.path.abspath(fp)), n) for fp, n in results
+            ]
 
             dir_totals = defaultdict(int)
             dir_self   = defaultdict(int)
             display_name = {}
+            parent_of    = {}
+            all_keys     = set()
             for fpath, n in results:
                 abs_dir = os.path.abspath(os.path.dirname(fpath))
                 key = os.path.normcase(abs_dir)
@@ -361,24 +379,37 @@ class Window:
                 d = key
                 while True:
                     dir_totals[d] += n
+                    all_keys.add(d)
                     if d not in display_name:
-                        display_name[d] = d_display
+                        display_name[d] = to_relative(d_display)
                     if d in norm_roots:
                         break
                     d_display = os.path.dirname(d_display)
                     parent = os.path.normcase(d_display)
                     if parent == d:
                         break
+                    parent_of[d] = parent
                     d = parent
-            self.dir_results = [
-                (display_name.get(k, k), v, dir_self.get(k, 0))
-                for k, v in dir_totals.items()
-            ]
 
+            self.dir_data = {
+                k: (display_name.get(k, k), dir_totals[k], dir_self.get(k, 0))
+                for k in all_keys
+            }
+            children = defaultdict(list)
+            roots = []
+            for k in all_keys:
+                if k in parent_of:
+                    children[parent_of[k]].append(k)
+                else:
+                    roots.append(k)
+            self.dir_children = dict(children)
+            self.dir_roots = roots
+
+            num_dirs = len(self.dir_data)
             lbl_res_title["text"] = f"Complete — {total:,} total lines"
             lbl_res_sub["text"] = (
                 f"{len(results)} file{'s' if len(results) != 1 else ''} across "
-                f"{len(self.dir_results)} director{'ies' if len(self.dir_results) != 1 else 'y'}")
+                f"{num_dirs} director{'ies' if num_dirs != 1 else 'y'}")
             sort_dir_results(descending=True)
             sort_results(descending=True)
             show_view(frm_results)
@@ -390,10 +421,34 @@ class Window:
 
         def sort_dir_results(descending=True):
             dir_tree.delete(*dir_tree.get_children())
-            for dpath, n, s in sorted(
-                    self.dir_results, key=lambda x: x[1], reverse=descending):
-                dir_tree.insert("", tk.END, values=(
-                    dpath, f"{n:,}", _pct(n), f"{s:,}", _pct(s)))
+
+            def insert_subtree(parent_iid, keys):
+                keys = sorted(keys,
+                    key=lambda k: self.dir_data[k][1], reverse=True)
+                for k in keys:
+                    display, total, self_n = self.dir_data[k]
+                    label = os.path.basename(display) or display
+                    iid = dir_tree.insert(parent_iid, tk.END, text=label,
+                        values=(f"{total:,}", _pct(total),
+                                f"{self_n:,}", _pct(self_n)),
+                        open=True, tags=("child",))
+                    children = self.dir_children.get(k, [])
+                    if children:
+                        insert_subtree(iid, children)
+
+            all_keys = sorted(
+                self.dir_data.keys(),
+                key=lambda k: self.dir_data[k][1],
+                reverse=descending)
+            for k in all_keys:
+                display, total, self_n = self.dir_data[k]
+                iid = dir_tree.insert("", tk.END, text=display,
+                    values=(f"{total:,}", _pct(total),
+                            f"{self_n:,}", _pct(self_n)),
+                    open=False)
+                children = self.dir_children.get(k, [])
+                if children:
+                    insert_subtree(iid, children)
 
         def sort_results(descending=True):
             tree.delete(*tree.get_children())
